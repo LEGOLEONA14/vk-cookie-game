@@ -2,313 +2,354 @@
 <html lang="ru">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
   <title>Печенька с предсказанием</title>
   <style>
     :root {
-      --bg-color: #2b2d42;
-      --purple: #6c5ce7;
-      --gold: #fdcb6e;
-      --cookie-bg: #ffeaa7;
-      --text-white: #ffffff;
+      --bg-dark: #3E2723; /* Цвет темного дерева */
+      --bg-panel: #5D4037;
+      --purple: #8E24AA;
+      --purple-bright: #AB47BC;
+      --cookie-base: #FFE082;
+      --cookie-border: #D7CCC8;
+      --cookie-text: #3E2723;
+      --coin-gold: #FFD700;
+      --text-white: #FFFFFF;
+      --progress-bg: #263238;
+      --progress-fill: #FFA000;
     }
 
     body {
       margin: 0;
       padding: 0;
-      background-color: var(--bg-color);
+      background-color: var(--bg-dark);
       color: var(--text-white);
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      overflow: hidden; /* Чтобы не было скролла */
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      overflow: hidden;
       height: 100vh;
       display: flex;
       flex-direction: column;
     }
 
-    /* Верхняя панель (экономика) */
+    /* Верхняя панель */
     header {
-      padding: 15px 20px;
-      background: rgba(255, 255, 255, 0.1);
+      padding: 10px 15px;
+      background: rgba(0, 0, 0, 0.4);
       backdrop-filter: blur(10px);
       display: flex;
       justify-content: space-between;
       align-items: center;
-      border-bottom: 1px solid rgba(255,255,255,0.2);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
       z-index: 10;
     }
 
-    .resource-group {
+    .stats-group {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 12px;
+    }
+
+    .coin-display {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,0,0,0.3);
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid rgba(255,255,255,0.2);
     }
 
     .coin-icon {
       width: 24px;
       height: 24px;
-      background: var(--gold);
+      background: var(--coin-gold);
       border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
+      color: #333;
       font-weight: bold;
-      color: #000;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.3);
     }
 
-    .resource-text h2 {
-      margin: 0;
-      font-size: 20px;
-      color: var(--gold);
-    }
-    .resource-text span {
-      font-size: 12px;
-      color: rgba(255,255,255,0.7);
-    }
+    .stat-value { font-size: 18px; font-weight: bold; color: #FFD700; }
+    .stat-rate { font-size: 12px; color: #BDBDBD; }
 
     .btn-plus {
-      background: rgba(255,255,255,0.2);
-      border: none;
+      background: rgba(255,255,255,0.1);
+      border: 1px solid rgba(255,255,255,0.2);
       color: white;
-      width: 30px;
-      height: 30px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       cursor: pointer;
-      transition: transform 0.1s;
+      transition: transform 0.1s, background 0.2s;
     }
-    .btn-plus:active { transform: scale(0.9); }
+    .btn-plus:active { transform: scale(0.9); background: rgba(255,255,255,0.3); }
 
     /* Игровое поле */
-    .game-container {
+    .game-area {
       flex: 1;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      padding: 20px;
+      padding: 10px;
       position: relative;
     }
 
-    /* Сетка для печенек (фон) */
-    .grid-area {
+    /* Сетка */
+    .grid-container {
       width: 100%;
-      max-width: 320px;
+      max-width: 340px;
       aspect-ratio: 1;
-      background: #d1ccc0;
-      border-radius: 15px;
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      grid-template-rows: repeat(3, 1fr);
-      gap: 5px;
-      padding: 10px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.3);
-      position: relative;
-      z-index: 5;
+      grid-template-rows: repeat(4, 1fr); /* 4 ряда, как на фото */
+      gap: 8px;
+      padding: 5px;
     }
 
-    .grid-cell {
-      background: var(--cookie-bg);
-      border-radius: 10px;
+    .cell {
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 40px;
-      color: #ff7675;
-      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      position: relative;
     }
 
-    /* Плашка предсказания */
-    .fortune-box {
+    /* SVG Печенька - СТИЛИЗАЦИЯ ПОД СКРИНШОТ */
+    .cookie-svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); /* Объемная тень */
+    }
+
+    /* Панель прогресса внизу */
+    .bottom-panel {
       position: absolute;
-      bottom: 120px; /* Отступ от кнопки */
-      background: white;
-      color: #2d3436;
-      padding: 15px;
+      bottom: 110px; /* Место под кнопку */
+      width: 100%;
+      max-width: 340px;
+      background: rgba(0,0,0,0.6);
+      backdrop-filter: blur(8px);
+      padding: 12px;
       border-radius: 12px;
-      box-shadow: 0 10px 25px rgba(0,0,0,0.3);
-      max-width: 80%;
+      border: 1px solid rgba(255,255,255,0.1);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.5);
       text-align: center;
-      opacity: 0;
-      transform: translateY(20px);
-      transition: all 0.3s ease;
-      z-index: 6;
-      border-left: 5px solid var(--purple);
+      z-index: 5;
     }
-    .fortune-box.show {
-      opacity: 1;
-      transform: translateY(0);
-    }
-    .fortune-box h3 { margin: 0 0 10px 0; color: var(--purple); }
 
-    /* Кнопка открытия */
-    .open-btn {
+    .goal-text {
+      font-size: 14px;
+      color: #FFD700;
+      font-weight: bold;
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .progress-bar-bg {
+      height: 6px;
+      background: var(--progress-bg);
+      border-radius: 3px;
+      overflow: hidden;
+      margin-bottom: 4px;
+    }
+
+    .progress-bar-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--progress-fill), #FF5722);
+      width: 75%; /* 3 из 4 */
+      transition: width 0.5s ease;
+    }
+
+    .sub-text {
+      font-size: 11px;
+      color: #BDBDBD;
+    }
+
+    /* Кнопка действия */
+    .action-btn {
       position: absolute;
       bottom: 20px;
       width: 100px;
       height: 100px;
-      background: var(--purple);
+      background: radial-gradient(circle, var(--purple-bright), var(--purple));
       border-radius: 50%;
       border: none;
       color: white;
-      font-size: 32px;
+      font-size: 40px;
       cursor: pointer;
-      box-shadow: 0 10px 20px rgba(108, 92, 231, 0.4);
+      box-shadow: 0 10px 25px rgba(142, 36, 170, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 6;
       transition: transform 0.1s;
+    }
+    .action-btn:active { transform: scale(0.95); }
+
+    /* Плашка предсказания (появляется при клике) */
+    .fortune-popup {
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.85);
+      backdrop-filter: blur(4px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .popup-content {
+      background: #FFF8E1;
+      padding: 30px;
+      border-radius: 20px;
+      text-align: center;
+      max-width: 80%;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      border: 2px solid #FFD700;
+    }
+
+    .popup-content h2 { color: var(--purple); margin-top: 0; }
+    .popup-content p { color: #333; font-size: 18px; line-height: 1.4; }
+    
+    .close-btn {
+      margin-top: 20px;
+      padding: 10px 30px;
+      background: var(--purple);
+      color: white;
+      border: none;
+      border-radius: 20px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    /* Быстрая покупка (имитация) */
+    .quick-buy-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      background: rgba(142, 36, 170, 0.9);
+      padding: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
       z-index: 7;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+    .buy-text { font-size: 14px; font-weight: bold; }
+    .buy-price { font-size: 16px; font-weight: bold; color: #FFD700; }
+    .buy-icon {
+      width: 40px;
+      height: 40px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 8px;
       display: flex;
       align-items: center;
       justify-content: center;
     }
-    .open-btn:active { transform: scale(0.95); }
 
-    @keyframes popIn {
-      from { transform: scale(0); }
-      to { transform: scale(1); }
-    }
-
-    /* Нижний статус */
-    .status-bar {
-      padding: 10px;
-      text-align: center;
-      font-size: 12px;
-      color: rgba(255,255,255,0.6);
-      background: rgba(0,0,0,0.2);
-    }
   </style>
 </head>
 <body>
 
   <header>
-    <div class="resource-group">
-      <div class="coin-icon">💰</div>
-      <div class="resource-text">
-        <h2 id="coins">0</h2>
-        <span id="cps">0.0/с</span>
+    <div class="stats-group">
+      <div class="coin-display">
+        <div class="coin-icon">💰</div>
+        <div>
+          <div class="stat-value" id="coins">25M</div>
+          <div class="stat-rate" id="cps">15.3/с</div>
+        </div>
+      </div>
+      <div class="coin-display" style="background: rgba(100, 50, 150, 0.3); border-color: rgba(150, 50, 200, 0.5);">
+         <span style="color: #FFA000;">3</span>💎
       </div>
     </div>
     <button class="btn-plus">+</button>
   </header>
 
-  <div class="game-container">
-    <!-- Сюда JS будет добавлять печеньки -->
-    <div class="grid-area" id="grid"></div>
-
-    <div class="fortune-box" id="fortune">
-      <h3>Твое предсказание</h3>
-      <p id="fortune-text">Жди...</p>
+  <div class="game-area">
+    <div class="grid-container" id="grid">
+      <!-- Печеньки генерируются JS -->
     </div>
 
-    <button class="open-btn" id="openBtn">🍪</button>
+    <div class="bottom-panel">
+      <div class="goal-text">Получи печеньку 4-го уровня</div>
+      <div class="progress-bar-bg">
+        <div class="progress-bar-fill" style="width: 75%" id="prog-fill"></div>
+      </div>
+      <div class="sub-text">3/4</div>
+    </div>
+
+    <button class="action-btn" id="openBtn">🍪</button>
   </div>
 
-  <div class="status-bar">
-    Мини-игра ВКонтакте | Прогресс сохраняется
+  <div class="quick-buy-bar">
+    <div>
+      <div class="buy-text">Быстрая покупка</div>
+      <div class="buy-price">196.72</div>
+    </div>
+    <div class="buy-icon">
+      <span style="font-size: 20px;">🍪</span>
+    </div>
+  </div>
+
+  <!-- Модальное окно предсказания -->
+  <div class="fortune-popup" id="fortuneModal">
+    <div class="popup-content">
+      <h2>Твое предсказание</h2>
+      <p id="fortuneText">Судьба готовит тебе приятный сюрприз...</p>
+      <button class="close-btn" onclick="closeFortune()">Узнать подробнее</button>
+    </div>
   </div>
 
   <script>
-    // --- ДАННЫЕ ИГРЫ ---
     const state = {
-      coins: 0,
-      cps: 15.3, // Coins Per Second
-      openedCount: 0,
-      predictions: [
-        "Сегодня удача будет на твоей стороне!",
-        "Не бойся начинать что-то новое.",
-        "Кто-то думает о тебе прямо сейчас.",
-        "Тебя ждет приятный сюрприз.",
-        "Доверься своей интуиции.",
-        "Трудности делают тебя сильнее.",
-        "Сегодня идеальный день для отдыха.",
-        "Твои усилия скоро окупятся."
-      ]
+      coins: 25000000,
+      cps: 15.3,
+      progress: 3, // 3 из 4
+      maxProgress: 4
     };
 
-    // --- ЗАГРУЗКА СОХРАНЕНИЯ ---
-    function loadGame() {
-      const saved = localStorage.getItem('cookie_game_state');
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        state.coins = parsed.coins;
-        state.openedCount = parsed.openedCount;
-        // CPS можно не сохранять, если он фиксированный, но можно и сохранить
-      }
-      updateUI();
-      startAutoIncome();
+    const predictions = [
+      "Сегодня удача будет на твоей стороне!",
+      "Не бойся начинать что-то новое — результат превзойдет ожидания.",
+      "Кто-то думает о тебе прямо сейчас.",
+      "Твое терпение скоро окупится.",
+      "День будет полон приятных мелочей."
+    ];
+
+    // Инициализация сетки
+    const grid = document.getElementById('grid');
+    
+    // Функция генерации SVG печеньки (максимально похоже на скриншот)
+    function getCookieSVG(value) {
+      return `
+        <svg class="cookie-svg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+          <!-- Основа (бежевая) -->
+          <rect x="2" y="2" width="96" height="96" rx="12" ry="12" fill="#FFE082" />
+          
+          <!-- Рамка (светлая) -->
+          <rect x="2" y="2" width="96" height="96" rx="12" ry="12" fill="none" stroke="#D7CCC8" stroke-width="2" />
+          
+          <!-- Зубчатый край (имитация) -->
+          <path d="M2,10 L2,90 L10,98 L90,98 L98,90 L98,10 L90,2 L10,2 Z" fill="none" stroke="#BCAAA4" stroke-width="1.5" stroke-linejoin="round" />
+          
+          <!-- Текстура (точки) -->
+          <circle cx="15" cy="15" r="1.5" fill="#D7CCC8" />
+          <circle cx="85" cy="85" r="1.5" fill="#D7CCC8" />
+          <circle cx="50" cy="20" r="1" fill="#BCAAA4" />
+          
+          <!-- Цифра -->
+          <text x="50" y="60" font-family="Arial, sans-serif" font-size="36" font-weight="bold" fill="#3E2723" text-anchor="middle" dominant-baseline="middle">\${value}</text>
+        </svg>
+      `;
     }
 
-    // --- СОХРАНЕНИЕ ---
-    function saveGame() {
-      localStorage.setItem('cookie_game_state', JSON.stringify(state));
-    }
-
-    // --- ОБНОВЛЕНИЕ ИНТЕРФЕЙСА ---
-    function updateUI() {
-      document.getElementById('coins').innerText = formatNumber(state.coins);
-      document.getElementById('cps').innerText = state.cps.toFixed(1) + '/с';
-      
-      // Рисуем "печеньки" на поле (просто заглушки, чтобы было красиво)
-      const grid = document.getElementById('grid');
-      grid.innerHTML = '';
-      for(let i=0; i<9; i++) {
-        const cell = document.createElement('div');
-        cell.className = 'grid-cell';
-        cell.innerText = '🍪';
-        grid.appendChild(cell);
-      }
-    }
-
-    // Форматирование больших чисел (1000 -> 1K)
-    function formatNumber(num) {
-      if (num >= 1000000) return (num / 1000000).toFixed(1) + 'M';
-      if (num >= 1000) return (num / 1000).toFixed(1) + 'K';
-      return Math.floor(num);
-    }
-
-    // --- АВТО-ДОХОД ---
-    function startAutoIncome() {
-      setInterval(() => {
-        state.coins += state.cps;
-        document.getElementById('coins').innerText = formatNumber(state.coins);
-        saveGame(); // Сохраняем часто, чтобы не потерять копейки
-      }, 1000);
-    }
-
-    // --- МЕХАНИКА ОТКРЫТИЯ ---
-    const btn = document.getElementById('openBtn');
-    const fortuneBox = document.getElementById('fortune');
-    const fortuneText = document.getElementById('fortune-text');
-
-    btn.addEventListener('click', () => {
-      // 1. Анимация появления предсказания
-      fortuneBox.classList.remove('show');
-      void fortuneBox.offsetWidth; // Триггер перерисовки
-      
-      // 2. Выбор случайного предсказания
-      const randomPred = state.predictions[Math.floor(Math.random() * state.predictions.length)];
-      fortuneText.innerText = randomPred;
-      
-      // 3. Добавляем немного монет за открытие
-      const reward = 100 + Math.floor(Math.random() * 50);
-      state.coins += reward;
-      state.openedCount++;
-      
-      // 4. Обновляем UI и сохраняем
-      updateUI();
-      saveGame();
-
-      // 5. Показываем плашку
-      setTimeout(() => {
-        fortuneBox.classList.add('show');
-      }, 100);
-    });
-
-    // Запуск при старте
-    loadGame();
-  </script>
-
-  <!-- VK Bridge (если будешь публиковать в ВК) -->
-  <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
-  <script>
-    vkBridge.send('VKWebAppInit');
-  </script>
-</body>
-</html>
+    function initGrid() {
+      const values = [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1];
