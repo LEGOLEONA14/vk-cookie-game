@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Печеньки</title>
+    <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+    <style>
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        background: #f5f5f7;
+        color: #000;
+        text-align: center;
+        padding: 20px;
+        margin: 0;
+      }
+      h1 { margin: 10px 0; }
+      .stats { font-size: 1.2rem; margin: 15px 0; color: #333; }
+      #cookie-btn {
+        width: 200px; height: 200px;
+        border-radius: 50%;
+        background: radial-gradient(#ffe4b5, #ffeb3b, #d4af37);
+        border: 8px solid #8b4513;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+        cursor: pointer;
+        transition: transform 0.1s;
+        outline: none;
+      }
+      #cookie-btn:active { transform: scale(0.96); }
+      .shop-item {
+        display: inline-block;
+        margin: 10px;
+        padding: 12px 18px;
+        border: 1px solid #ccc;
+        border-radius: 8px;
+        min-width: 160px;
+        text-align: left;
+        cursor: pointer;
+      }
+      .shop-item.disabled { opacity: 0.4; cursor: default; }
+      .shop-item strong { display: block; margin-bottom: 4px; }
+      .btn-buy {
+        background: #0077FF; color: white; border: none;
+        padding: 6px 12px; border-radius: 6px;
+        font-size: 0.9rem; cursor: pointer; margin-top: 6px;
+      }
+      .log { margin-top: 20px; text-align: left; font-size: 0.85rem; color: #555; }
+    </style>
+  </head>
+  <body>
+    <h1>🍪 Печеньки</h1>
+    <div class="stats">Печенек: <span id="score">0</span></div>
+
+    <button id="cookie-btn"></button>
+
+    <div style="margin-top:30px;">
+      <h3>Магазин улучшений</h3>
+      <div id="shop"></div>
+    </div>
+
+    <div class="log" id="log"></div>
+
+    <script>
+      vkBridge.send('VKWebAppInit');
+
+      // --- Игровая логика ---
+      let score = 0;
+      const upgrades = [
+        { id: 'auto1', name: 'Авто-печенька I', cost: 50, rate: 1, count: 0 },
+        { id: 'auto2', name: 'Авто-печенька II', cost: 150, rate: 3, count: 0 },
+        { id: 'click1', name: '+1 за клик', cost: 30, rate: 1, count: 0 }
+      ];
+
+      function saveGame() {
+        const data = { score, upgrades };
+        vkBridge.send('VKWebAppStorageSetItem', { key: 'cookie_game_save', value: JSON.stringify(data) })
+          .catch(e => console.error(e));
+      }
+
+      async function loadGame() {
+        try {
+          const res = await vkBridge.sendPromise('VKWebAppStorageGetItem', { key: 'cookie_game_save' });
+          if (res.value) {
+            const saved = JSON.parse(res.value);
+            score = saved.score;
+            upgrades.forEach(u => {
+              const s = saved.upgrades.find(su => su.id === u.id);
+              if (s) { u.count = s.count; }
+            });
+          }
+        } catch (e) { console.error(e); }
+        render();
+        startAuto();
+      }
+
+      function addScore(amount) {
+        score += amount;
+        render();
+        saveGame();
+      }
+
+      function buyUpgrade(id) {
+        const u = upgrades.find(x => x.id === id);
+        if (!u) return;
+        if (score >= u.cost) {
+          score -= u.cost;
+          u.count++;
+          u.cost = Math.floor(u.cost * 1.5); // усложнение цены
+          render();
+          saveGame();
+        } else {
+          log('Не хватает печенек!');
+        }
+      }
+
+      function getTotalRate() {
+        let r = 0;
+        upgrades.forEach(u => r += u.rate * u.count);
+        return r;
+      }
+
+      let autoInterval = null;
+      function startAuto() {
+        if (autoInterval) clearInterval(autoInterval);
+        autoInterval = setInterval(() => {
+          const r = getTotalRate();
+          if (r > 0) addScore(r);
+        }, 1000); // авто-начисление каждую секунду
+      }
+
+      function log(msg) {
+        const el = document.getElementById('log');
+        el.textContent = msg;
+      }
+
+      // --- Рендер ---
+      function render() {
+        document.getElementById('score').textContent = score;
+        const shopEl = document.getElementById('shop');
+        shopEl.innerHTML = '';
+        upgrades.forEach((u, i) => {
+          const canBuy = score >= u.cost;
+          const div = document.createElement('div');
+          div.className = 'shop-item' + (canBuy ? '' : ' disabled');
+          div.innerHTML = `
+            <strong>${u.name}</strong>
+            Цена: ${u.cost} 🍪<br>
+            Эффект: +${u.rate} ${u.id.startsWith('auto') ? 'в сек' : 'за клик'} ×${u.count}<br>
+            <button class="btn-buy" onclick="buyUpgrade('${u.id}')">${canBuy ? 'Купить' : 'Не хватает'}</button>
+          `;
+          shopEl.appendChild(div);
+        });
+      }
+
+      // --- VK Init ---
+      vkBridge.subscribe((e) => {
+        if (e.detail.type === 'VKWebAppInitResult') {
+          loadGame();
+        }
+      });
+
+      // --- Клик по печеньке ---
+      document.getElementById('cookie-btn').addEventListener('click', () => {
+        addScore(1);
+        // можно добавить анимацию тряски/вспышки по желанию
+      });
+    </script>
+  </body>
+</html>
