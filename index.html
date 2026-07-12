@@ -231,3 +231,43 @@
 
   </body>
 </html>
+  <!-- ... весь твой код (кнопки, магазин, логика) ... -->
+
+  <script>
+    // Твоя основная логика (click, shop, setInterval и т.д.)
+    let score = 0;
+    // ... остальной код ...
+  </script>
+
+  <!-- Сюда вставляй VK Bridge -->
+  <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+  <script>
+    vkBridge.send('VKWebAppInit');
+
+    // Загрузка из localStorage
+    if (localStorage.getItem('cookie_game_score')) {
+      score = parseFloat(localStorage.getItem('cookie_game_score'));
+      clickPower = parseInt(localStorage.getItem('cookie_game_clickPower')) || 1;
+      autoClick = parseInt(localStorage.getItem('cookie_game_autoClick')) || 0;
+      updateUI();
+    }
+
+    function saveProgress() {
+      localStorage.setItem('cookie_game_score', score);
+      localStorage.setItem('cookie_game_clickPower', clickPower);
+      localStorage.setItem('cookie_game_autoClick', autoClick);
+    }
+
+    // Перехваты событий для сохранения
+    clickBtn.addEventListener('click', () => {
+      saveProgress();
+    });
+
+    buyBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        saveProgress();
+      });
+    });
+  </script>
+</body>
+</html>
