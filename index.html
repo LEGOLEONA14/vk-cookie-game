@@ -119,137 +119,76 @@
 </head>
 <body>
 
-<header>
-  <div id="score-display">0 печенек</div>
-</header>
+  <header>
+    <div id="score-display">0 печенек</div>
+  </header>
 
-<div class="main-area">
-  <button id="click-btn">🍪</button>
-  <div class="prediction-box">
-    <div class="prediction-text" id="prediction-text">Нажми на печеньку!</div>
-  </div>
-</div>
-
-<section class="shop-section">
-  <h3 style="margin-bottom:12px; color:#2d3436;">Магазин улучшений</h3>
-  <div class="shop-item">
-    <div class="item-info">
-      <h4>+1 к клику</h4>
-      <p>Увеличивает награду за клик</p>
+  <div class="main-area">
+    <button id="click-btn">🍪</button>
+    <div class="prediction-box">
+      <div class="prediction-text" id="prediction-text">Нажми на печеньку!</div>
     </div>
-    <button class="buy-btn" data-type="click" data-cost="10">Купить за 10</button>
   </div>
-  <div class="shop-item">
-    <div class="item-info">
-      <h4>Авто-печенька</h4>
-      <p>Приносит печеньки автоматически</p>
+
+  <section class="shop-section">
+    <h3 style="margin-bottom:12px; color:#2d3436;">Магазин улучшений</h3>
+    <div class="shop-item">
+      <div class="item-info">
+        <h4>+1 к клику</h4>
+        <p>Увеличивает награду за клик</p>
+      </div>
+      <button class="buy-btn" data-type="click" data-cost="10">Купить за 10</button>
     </div>
-    <button class="buy-btn" data-type="auto" data-cost="50">Купить за 50</button>
-  </div>
-</section>
+    <div class="shop-item">
+      <div class="item-info">
+        <h4>Авто-печенька</h4>
+        <p>Приносит печеньки автоматически</p>
+      </div>
+      <button class="buy-btn" data-type="auto" data-cost="50">Купить за 50</button>
+    </div>
+  </section>
 
-<script>
-  // Базовые переменные
-  let score = 0;
-  let clickPower = 1;
-  let autoClick = 0;
-
-  const scoreEl = document.getElementById('score-display');
-  const predictionEl = document.getElementById('prediction-text');
-  const clickBtn = document.getElementById('click-btn');
-  const buyBtns = document.querySelectorAll('.buy-btn');
-
-  // Предсказания (как в «Печеньки с предсказанием»)
-  const predictions = [
-    "Сегодня печеньки особенно вкусные!",
-    "Кажется, ты на пути к миллиарду!",
-    "Судьба шепчет: кликни ещё разок.",
-    "Печенька говорит: не останавливайся!",
-    "Это точно будет удачный день для фарма.",
-    "Ещё один клик — и удача улыбнётся.",
-    "Ты почти у цели, не сдавайся!",
-    "Печеньки любят настойчивых."
-  ];
-
-  function updateUI() {
-    scoreEl.textContent = Math.floor(score) + " печенек";
-    // Обновляем кнопки магазина
-    buyBtns.forEach(btn => {
-      const cost = parseInt(btn.dataset.cost);
-      btn.disabled = score < cost;
-      if (btn.disabled) {
-        btn.textContent = "Не хватает печенек";
-      } else {
-        const type = btn.dataset.type;
-        if (type === 'click') btn.textContent = "Купить за " + cost;
-        else if (type === 'auto') btn.textContent = "Купить за " + cost;
-      }
-    });
-  }
-
-  function showPrediction() {
-    const r = Math.floor(Math.random() * predictions.length);
-    predictionEl.textContent = predictions[r];
-  }
-
-  clickBtn.addEventListener('click', () => {
-    score += clickPower;
-    showPrediction();
-    updateUI();
-  });
-
-  buyBtns.forEach(btn => {
-    btn.addEventListener('click', () => {
-      const type = btn.dataset.type;
-      const cost = parseInt(btn.dataset.cost);
-
-      if (score >= cost) {
-        score -= cost;
-        if (type === 'click') {
-          clickPower += 1;
-        } else if (type === 'auto') {
-          autoClick += 1; // +1 печенька в секунду
-        }
-        updateUI();
-      }
-    });
-  });
-
-  // Авто-клик (секундомер)
-  setInterval(() => {
-    if (autoClick > 0) {
-      score += autoClick;
-      updateUI();
-    }
-  }, 1000);
-
-  updateUI(); // Первый рендер
-</script>
-
-</body>
-</html>
-
-  </body>
-</html>
-  <!-- ... весь твой код (кнопки, магазин, логика) ... -->
-
+  <!-- Основная логика игры -->
   <script>
-    // Твоя основная логика (click, shop, setInterval и т.д.)
     let score = 0;
-    // ... остальной код ...
-  </script>
+    let clickPower = 1;
+    let autoClick = 0;
 
-  <!-- Сюда вставляй VK Bridge -->
-  <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
-  <script>
-    vkBridge.send('VKWebAppInit');
+    const scoreEl = document.getElementById('score-display');
+    const predictionEl = document.getElementById('prediction-text');
+    const clickBtn = document.getElementById('click-btn');
+    const buyBtns = document.querySelectorAll('.buy-btn');
 
-    // Загрузка из localStorage
-    if (localStorage.getItem('cookie_game_score')) {
-      score = parseFloat(localStorage.getItem('cookie_game_score'));
-      clickPower = parseInt(localStorage.getItem('cookie_game_clickPower')) || 1;
-      autoClick = parseInt(localStorage.getItem('cookie_game_autoClick')) || 0;
-      updateUI();
+    const predictions = [
+      "Сегодня печеньки особенно вкусные!",
+      "Кажется, ты на пути к миллиарду!",
+      "Судьба шепчет: кликни ещё разок.",
+      "Печенька говорит: не останавливайся!",
+      "Это точно будет удачный день для фарма.",
+      "Ещё один клик — и удача улыбнётся.",
+      "Ты почти у цели, не сдавайся!",
+      "Печеньки любят настойчивых."
+    ];
+
+    function updateUI() {
+      scoreEl.textContent = Math.floor(score) + " печенек";
+
+      buyBtns.forEach(btn => {
+        const cost = parseInt(btn.dataset.cost);
+        btn.disabled = score < cost;
+        if (btn.disabled) {
+          btn.textContent = "Не хватает печенек";
+        } else {
+          const type = btn.dataset.type;
+          if (type === 'click') btn.textContent = "Купить за " + cost;
+          else if (type === 'auto') btn.textContent = "Купить за " + cost;
+        }
+      });
+    }
+
+    function showPrediction() {
+      const r = Math.floor(Math.random() * predictions.length);
+      predictionEl.textContent = predictions[r];
     }
 
     function saveProgress() {
@@ -258,16 +197,55 @@
       localStorage.setItem('cookie_game_autoClick', autoClick);
     }
 
-    // Перехваты событий для сохранения
+    // Загрузка прогресса из localStorage
+    if (localStorage.getItem('cookie_game_score')) {
+      score = parseFloat(localStorage.getItem('cookie_game_score'));
+      clickPower = parseInt(localStorage.getItem('cookie_game_clickPower')) || 1;
+      autoClick = parseInt(localStorage.getItem('cookie_game_autoClick')) || 0;
+      updateUI();
+    } else {
+      updateUI();
+    }
+
     clickBtn.addEventListener('click', () => {
+      score += clickPower;
+      showPrediction();
+      updateUI();
       saveProgress();
     });
 
     buyBtns.forEach(btn => {
       btn.addEventListener('click', () => {
-        saveProgress();
+        const type = btn.dataset.type;
+        const cost = parseInt(btn.dataset.cost);
+
+        if (score >= cost) {
+          score -= cost;
+
+          if (type === 'click') {
+            clickPower += 1;
+          } else if (type === 'auto') {
+            autoClick += 1;
+          }
+
+          updateUI();
+          saveProgress();
+        }
       });
     });
+
+    setInterval(() => {
+      if (autoClick > 0) {
+        score += autoClick;
+        updateUI();
+      }
+    }, 1000);
+  </script>
+
+  <!-- VK Bridge: подключение и инициализация -->
+  <script src="https://unpkg.com/@vkontakte/vk-bridge/dist/browser.min.js"></script>
+  <script>
+    vkBridge.send('VKWebAppInit');
   </script>
 </body>
 </html>
